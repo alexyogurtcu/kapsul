@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zaman Kapsülü - 2028</title>
+    <style>
+        /* Genel Arka Plan ve Temizlik */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #001219;
+        }
+
+        #ocean {
+            width: 100%; height: 100vh;
+            background: url('landing/okyanus.jpg') no-repeat center center;
+            background-size: cover;
+            position: relative;
+        }
+
+        /* Bilgi Paneli */
+        .ui-panel {
+            position: absolute; top: 5%; width: 100%; 
+            text-align: center; color: white; z-index: 100;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+        }
+
+        .progress-bar { 
+            width: 75%; max-width: 350px; height: 14px; 
+            background: rgba(255,255,255,0.15); border-radius: 20px; 
+            margin: 20px auto; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        #progress-fill { 
+            width: 0%; height: 100%; background: linear-gradient(90deg, #00f5d4, #00bbff);
+            box-shadow: 0 0 20px #00f5d4; transition: width 2s ease-in-out; 
+        }
+
+        /* Ana Karakterler (Denizatı ve Sandık) */
+        #seahorse {
+            position: absolute; width: 90px; bottom: 22%; left: 0%;
+            transform: scaleX(-1); z-index: 60;
+            animation: floatAnim 4s infinite ease-in-out;
+            transition: left 2s ease-out;
+        }
+
+        #chest {
+            position: absolute; right: 8%; bottom: 18%; width: 110px; z-index: 50;
+        }
+
+        /* Deniz Canlıları (GIFler) */
+        .ocean-life { position: absolute; pointer-events: none; z-index: 10; opacity: 0.85; }
+        
+        #shark { width: 160px; top: 30%; left: -250px; animation: swimRight 22s linear infinite; }
+        
+        /* Balina: Küçük ve yukarıda */
+        #whale { width: 200px; top: 12%; right: -400px; animation: swimLeft 50s linear infinite; opacity: 0.5; }
+        
+        #turtle { width: 90px; bottom: 12%; left: 15%; animation: floatAnim 7s infinite ease-in-out; }
+        
+        /* Denizanaları: Büyütüldü ve Yayılımları Ayarlandı */
+        .jelly { width: 85px; opacity: 0.7; animation: jellyFloat 6s infinite ease-in-out; }
+        #jelly1 { top: 15%; right: 25%; animation-delay: 0s; }
+        #jelly2 { top: 45%; left: 15%; animation-delay: 2s; }
+        #jelly3 { bottom: 25%; right: 20%; animation-delay: 4s; }
+
+        #fish-group { width: 120px; top: 65%; left: 25%; animation: swimRight 16s linear infinite; }
+
+        /* Animasyon Tanımları */
+        @keyframes floatAnim {
+            0%, 100% { transform: translateY(0) scaleX(-1); }
+            50% { transform: translateY(-20px) scaleX(-1); }
+        }
+
+        @keyframes jellyFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+
+        @keyframes swimRight { from { left: -25%; } to { left: 125%; } }
+        @keyframes swimLeft { from { right: -35%; } to { right: 135%; } }
+
+        /* Hazine Butonu (Link Altyapısı Hazır) */
+        #unlock-btn { 
+            display: none; padding: 18px 35px; background: #ffbe0b; 
+            border: none; border-radius: 50px; font-weight: bold; 
+            cursor: pointer; color: #001219; font-size: 1.2rem;
+            text-decoration: none; box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            margin-top: 10px;
+        }
+
+        /* Mobil Cihazlar İçin Boyut Düzenlemesi */
+        @media (max-width: 600px) {
+            #seahorse { width: 75px; }
+            #chest { width: 90px; }
+            .jelly { width: 65px; }
+            #whale { width: 150px; }
+            #shark { width: 130px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="ocean">
+    <div class="ui-panel">
+        <h1 id="title">Zaman Kapsülü</h1>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        <p id="timer-label">Derinlikler taranıyor...</p>
+        <a id="unlock-btn" href="#" target="_blank">HAZİNEYİ AÇ</a>
+    </div>
+
+    <img id="shark" src="landing/shark.gif" class="ocean-life">
+    <img id="whale" src="landing/balina.gif" class="ocean-life">
+    <img id="turtle" src="landing/turtle.gif" class="ocean-life">
+    
+    <img id="jelly1" src="landing/jellyfish.gif" class="ocean-life jelly">
+    <img id="jelly2" src="landing/jellyfish.gif" class="ocean-life jelly">
+    <img id="jelly3" src="landing/jellyfish.gif" class="ocean-life jelly">
+
+    <img id="fish-group" src="landing/balik.gif" class="ocean-life">
+    
+    <img id="seahorse" src="landing/denizati.png">
+    <img id="chest" src="landing/hazine.png">
+</div>
+
+<script>
+    // Tarih Ayarları: 14 Şubat 2024 - 14 Şubat 2028
+    const START_DATE = new Date('2024-02-14').getTime();
+    const END_DATE = new Date('2028-02-14').getTime();
+
+    async function updateOceanState() {
+        let now;
+        try {
+            // Güvenli internet saati kontrolü
+            const response = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
+            const data = await response.json();
+            now = new Date(data.utc_datetime).getTime();
+        } catch (e) {
+            // İnternet yoksa cihaz saatine güven (ama hileye açık olur)
+            now = new Date().getTime(); 
+        }
+
+        const totalDuration = END_DATE - START_DATE;
+        const timePassed = now - START_DATE;
+        let progressPercent = (timePassed / totalDuration) * 100;
+
+        // Sınırlandırmalar
+        if (progressPercent < 0) progressPercent = 0;
+        if (progressPercent > 100) progressPercent = 100;
+
+        // UI Güncelleme
+        const fill = document.getElementById('progress-fill');
+        const seahorse = document.getElementById('seahorse');
+        const btn = document.getElementById('unlock-btn');
+        const label = document.getElementById('timer-label');
+        const title = document.getElementById('title');
+
+        fill.style.width = progressPercent + "%";
+        // Denizatını sandığa kadar (maksimum %78 ekran genişliği) yürüt
+        seahorse.style.left = (progressPercent * 0.78) + "%"; 
+
+        if (progressPercent >= 100) {
+            title.innerText = "Hazine Keşfedildi!";
+            label.innerText = "Yolculuk sona erdi. Hatıralar seni bekliyor.";
+            btn.style.display = "inline-block";
+        } else {
+            const timeLeft = END_DATE - now;
+            const daysRemaining = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
+            label.innerText = "Hazineye kavuşmaya " + daysRemaining + " gün kaldı.";
+        }
+    }
+
+    // İlk çalıştırma
+    updateOceanState();
+    // Saatte bir güncelle (Sayfa açık kalırsa diye)
+    setInterval(updateOceanState, 3600000);
+</script>
+
+</body>
+</html>
